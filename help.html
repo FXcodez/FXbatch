@@ -510,6 +510,33 @@
             <li><strong>Cancellation:</strong> Clicking Cancel Processing or pressing Escape halts active execution safely. Files that finished before cancellation remain saved in the destination folder.</li>
         </ul>
 
+        <h3>Performance benchmark</h3>
+        <p>
+            FXbatch allocates conversions across CPU cores with Python's multiprocessing pool. In a benchmark test on an internal SSD using default settings (Quality 60, Resize 40%, Format JPEG):
+        </p>
+        <div class="metric-grid">
+            <div class="metric-card">
+                <div class="label">Batch Size</div>
+                <div class="value">1,000 images</div>
+            </div>
+            <div class="metric-card">
+                <div class="label">Input Resolution</div>
+                <div class="value">5760x3840 px</div>
+            </div>
+            <div class="metric-card">
+                <div class="label">Output Resolution</div>
+                <div class="value">2304x1536 px</div>
+            </div>
+            <div class="metric-card success">
+                <div class="label">Elapsed Time</div>
+                <div class="value">~20.7 seconds</div>
+            </div>
+            <div class="metric-card">
+                <div class="label">Throughput</div>
+                <div class="value">~48 images/sec</div>
+            </div>
+        </div>
+
         <h3>Settings and preferences</h3>
         <p>
             Click the <strong>Settings</strong> button in the sidebar to open the configuration dialog:

@@ -46,6 +46,24 @@ FXbatch Resizer 2.0.0 is a desktop tool for bulk downscaling, DPI adjustment, an
 - Terminal-style log with real-time progress and a summary banner on completion that scrolls to the top automatically.
 - Settings window to configure default quality, resize percentage, DPI, and output subfolder name (default: `LowRes`).
 
+## Performance
+
+FXbatch uses Python's multiprocessing pool to distribute conversion tasks across all available CPU cores.
+
+### Benchmark example
+
+In a test run on an internal SSD using default settings (Quality: 60, Resize: 40%, Format: JPEG):
+
+| Metric | Result |
+|:---|:---|
+| **Batch size** | 1,000 images |
+| **Input resolution** | 5760x3840 px (22 MP) |
+| **Output resolution** | 2304x1536 px (40% scale) |
+| **Elapsed time** | ~20.7 seconds |
+| **Throughput** | ~48 images/sec |
+
+Processing times vary based on CPU core count, disk speed, and source file dimensions.
+
 ## Screenshots
 
 | Empty state | Settings dialog (light mode) |

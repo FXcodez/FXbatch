@@ -80,6 +80,8 @@ FXbatch v05 is a complete redesign and engine integration combining:
    - Upgraded to match the v05 dark design system (`#17181C` background, `#242424` surfaces, `#AA182C` crimson accent, Oswald and Roboto typography).
    - Fully vetted copy against `/humanizer` rules (zero em/en dashes, zero AI buzzwords, plain technical tone).
    - Detailed coverage of sample preview metrics, multi-core processing, format handling, settings, and keyboard shortcuts.
+8. **Performance Benchmark Added**:
+   - Documented reference conversion benchmark: 1,000 images at 5760x3840 px resized to 2304x1536 px (40% scale, Quality 60, JPEG) in ~20.7 seconds (~48 images/sec) on an SSD.
 
 
 ## 2. File Structure
