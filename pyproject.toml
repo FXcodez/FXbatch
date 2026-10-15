@@ -1,0 +1,21 @@
+[project]
+name = "fxbatch"
+version = "2.0.0"
+description = "FXbatch Resizer 2.0.0 — Fast batch image compression and resizing utility"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ctkmessagebox>=2.7",
+    "customtkinter>=6.0.0",
+    "pillow>=10.0.0",
+    "tkinterdnd2>=0.6.3",
+]
+
+[tool.uv]
+package = false
+link-mode = "copy"
+
+[dependency-groups]
+dev = [
+    "pyinstaller>=6.22.3",
+]
