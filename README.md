@@ -146,5 +146,4 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for detai
 
 ## Author
 
-FXcodez
-Contact: lalxxl@gmail.com
+[FXcodez](https://github.com/FXcodez)
