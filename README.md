@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="Design/Logos/FXbatch.png" alt="FXbatch Logo" width="380"/>
+<img src="icons/FXbatch.png" alt="FXbatch Logo" width="360"/>
 
-# FXbatch Resizer 2.0.0
+# FXbatch 2.5.0
 
-Batch image resizer and optimizer for desktop.
+Batch image resizer, optimizer, and Windows icon converter.
 
 [![Python Version](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/)
 [![Package Manager](https://img.shields.io/badge/managed%20by-uv-DE5FE9.svg)](https://github.com/astral-sh/uv)
@@ -17,42 +17,54 @@ Batch image resizer and optimizer for desktop.
 ## Overview
 
 <div align="center">
-  <img src="Design/Screenshots/fxbatch_dark_preview.png" alt="FXbatch Resizer in Action (Dark Mode)" width="850"/>
-  <p><em>Sample preview, in-memory compression estimation, and multi-core processing log.</em></p>
+  <img src="Screenshots/dark_filled.png" alt="FXbatch in Action" width="850"/>
+  <p><em>Folder dropzone, sample preview, size estimates, and multiprocessing log.</em></p>
 </div>
 
-FXbatch Resizer 2.0.0 is a desktop tool for bulk downscaling, DPI adjustment, and format conversion. It uses Python's multiprocessing pool to run conversions in parallel across all CPU cores while keeping the interface responsive.
+FXbatch is a desktop application for resizing, converting, and optimizing large folders of images. It distributes tasks across all available CPU cores using Python's multiprocessing pool, processing thousands of files quickly while keeping the interface responsive.
+
+## What's New in Version 2.5.0
+
+- **Output folder safety**: Conversions are blocked if the input and output directories match, protecting source images from accidental overwrites.
+- **Sizing modes**: In addition to percentage scaling (5% to 200%), you can scale by bounding box (fit within max width and max height), fixed width (proportional height), or fixed height (proportional width).
+- **Interpolation filters**: Choose between Lanczos, Bicubic, Bilinear, or Nearest Neighbor.
+- **Windows icon creation (.ico)**: Convert photos and graphics into Windows icons. Exports single sizes (16, 32, 48, 64, 128, 256 px) or a multi-resolution package with all six sizes. Non-square source images are detected automatically and cropped to a 1:1 center ratio to avoid distortion.
+- **AVIF format support**: Read and export AVIF images alongside JPEG, PNG, WebP, and ICO. Transparent areas in PNG, WebP, AVIF, and ICO files are preserved.
+- **File collision handling**: Select how existing output files are handled in Settings (Overwrite, Auto-Rename with a numeric suffix, or Skip Existing).
+- **Custom filename patterns**: Use dynamic tokens such as `{name}`, `{w}`, `{h}`, `{quality}`, and `{format}` to structure output filenames.
+- **Explorer shortcut**: An "Open Output Folder" button appears after batch completion for quick access to converted files.
+- **Interface updates**: Circular theme toggle button, descriptive mouseover tooltips for all settings fields, a reset-to-defaults button in Settings, and an updated activity progress display.
 
 ## Features
 
-### Processing engine
-- Distributes work across logical CPU cores with Python's multiprocessing pool.
-- Queues UI updates through a 20 ms polling loop on the main thread so the interface never freezes during long runs.
-- Includes a 2.5-second warmup curve on the progress bar while worker processes spin up.
+### Parallel processing
+- Uses all logical CPU cores via Python's multiprocessing pool.
+- Background progress updates poll on a 20 ms timer on the main thread to ensure the window remains responsive during long batches.
+- Progress bar includes a 2.5-second warmup simulation while worker processes initialize.
 
-### Live sample analysis
-- Estimates output file size and compression percentage in memory using Pillow BytesIO buffers, without writing temporary files to disk.
-- Five cards show original resolution, target resolution, estimated file size, savings percentage, and DPI.
-- Previews the first image in the folder with Lanczos resampling.
+### In-memory sample preview
+- Generates live size and compression estimates using Pillow BytesIO buffers without writing temporary files to disk.
+- Telemetry cards display original resolution, target resolution, estimated file size, savings percentage, and DPI.
+- Previews the first image in the selected folder with high-quality resampling.
 
 ### Output controls
-- Quality (10 to 100) and resize scale (10% to 100%) can be adjusted by slider or typed directly into numeric fields.
+- Quality scale from 10 to 100 with direct numeric input or slider controls.
+- Output resolution scaling via percentage (5% to 200%), bounding box, fixed width, or fixed height.
 - DPI resampling from 72 to 3000 DPI.
-- Supports JPEG, PNG, and WebP. Transparent areas in PNG or RGBA files are flattened onto a white background when saving to JPEG.
+- Formats: JPEG, PNG, WebP, AVIF, and ICO. Transparent PNG, WebP, and AVIF images are flattened onto a white background when saving to JPEG.
 
-### Interface
-- Dark mode and light mode with an option in Settings to choose the startup theme.
-- Drag and drop folders directly into the dropzone, or select them with the system file picker.
-- Terminal-style log with real-time progress and a summary banner on completion that scrolls to the top automatically.
-- Settings window to configure default quality, resize percentage, DPI, and output subfolder name (default: `LowRes`).
+### Settings and preferences
+- Set default quality, resize parameters, DPI, output subfolder, collision policy, and filename pattern.
+- Choose startup theme (System, Dark, or Light).
+- Preferences are saved locally to `config.ini`.
 
 ## Performance
 
-FXbatch uses Python's multiprocessing pool to distribute conversion tasks across all available CPU cores.
+FXbatch runs conversions concurrently across CPU cores.
 
 ### Benchmark example
 
-In a test run on an internal SSD using default settings (Quality: 60, Resize: 40%, Format: JPEG):
+Tested on an internal NVMe SSD with default settings (Quality: 60, Resize: 40%, Format: JPEG):
 
 | Metric | Result |
 |:---|:---|
@@ -62,18 +74,22 @@ In a test run on an internal SSD using default settings (Quality: 60, Resize: 40
 | **Elapsed time** | ~20.7 seconds |
 | **Throughput** | ~48 images/sec |
 
-Processing times vary based on CPU core count, disk speed, and source file dimensions.
+*Processing speeds vary based on CPU core count, disk read/write speed, and image dimensions.*
 
 ## Screenshots
 
-| Empty state | Settings dialog (light mode) |
+| Startup screen | Settings dialog (light mode) |
 |:---:|:---:|
-| <img src="Design/Screenshots/fxbatch_dark_empty.png" alt="Empty state" width="420"/> | <img src="Design/Screenshots/fxbatch_light_settings.png" alt="Settings dialog" width="420"/> |
-| *Folder dropzone with quick tips.* | *Default values and theme preferences.* |
+| <img src="Screenshots/dark.png" alt="FXbatch Startup" width="420"/> | <img src="Screenshots/light_settings.png" alt="Settings Dialog" width="420"/> |
+| *Folder dropzone with quick tips.* | *Configuration options, collision policies, and naming tokens.* |
 
-## Quick start
+## Installation and Downloads
 
-### With uv (recommended)
+Pre-built binaries for 64-bit Windows are available on the [Releases](https://github.com/FXcodez/FXbatch/releases) page:
+- **Windows Installer**: `FXbatch-2.5.0-Setup.exe` (setup wizard with desktop and Start Menu shortcuts)
+- **Portable ZIP**: `FXbatch-2.5.0-Portable.zip` (extract and run `FXbatch.exe`, no installation needed)
+
+### Running from source with uv (recommended)
 
 1. Clone the repository:
    ```bash
@@ -81,17 +97,12 @@ Processing times vary based on CPU core count, disk speed, and source file dimen
    cd FXbatch
    ```
 
-2. Install dependencies:
+2. Run the application:
    ```bash
-   uv sync
+   uv run python fxbatch_main_gui.py
    ```
 
-3. Run the application:
-   ```bash
-   uv run fxbatch_main_gui.py
-   ```
-
-### With standard pip and venv
+### Running with standard pip and venv
 
 1. Clone the repository:
    ```bash
@@ -112,7 +123,7 @@ Processing times vary based on CPU core count, disk speed, and source file dimen
 
 3. Install dependencies:
    ```bash
-   pip install customtkinter pillow tkinterdnd2 ctkmessagebox
+   pip install customtkinter pillow tkinterdnd2 pillow-avif-plugin
    ```
 
 4. Run the application:
@@ -120,51 +131,20 @@ Processing times vary based on CPU core count, disk speed, and source file dimen
    python fxbatch_main_gui.py
    ```
 
-## How to use
+### Building the standalone executable
 
-1. Pick an input folder by dropping a folder into the dropzone or clicking Browse.
-2. Choose an output format (JPEG, PNG, or WebP).
-3. Set your target quality, resize percentage, and DPI.
-4. Check the sample preview and estimated size reduction on the right.
-5. Click Batch Convert Images. Converted files are saved in a `LowRes` folder inside your input directory.
-
-## Project structure
-
-```
-FXbatch/
-├── Design/
-│   ├── Images/                # Sample test images
-│   ├── Logos/                 # Brand icons and vector assets
-│   └── Screenshots/           # Interface screenshots
-├── fonts/                     # Bundled fonts (Oswald, Roboto, Roboto Mono)
-├── icons/                     # Application icons (.ico, .png, .icns)
-├── .gitignore                 # Excludes environments, build outputs, and cache
-├── config.ini                 # Saved defaults and preferences
-├── ConsolidatedChanges.md     # Architecture notes and version history
-├── fxbatch_main_gui.py        # Main application window and settings dialog
-├── help.html                  # Built-in help documentation
-├── image_compressor.py        # Multiprocessing conversion engine
-├── LICENSE                    # MIT License
-├── pyproject.toml             # Project dependencies and packaging metadata
-├── README.md                  # Project documentation
-├── ui_preview.py              # Standalone interface preview
-├── uv.lock                    # Dependency lockfile
-└── widgets.py                 # CustomTkinter components and layout helpers
+To compile the standalone Windows executable using PyInstaller:
+```bash
+uv run pyinstaller FXbatch.spec
 ```
 
-## Requirements
-
-- Python >= 3.12
-- CustomTkinter
-- Pillow
-- TkinterDnD2
-- uv (optional, for project management)
+The compiled application folder will be created in `dist/FXbatch/`.
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ## Author
 
-FXcodez (LalFX)
+FXcodez
 Contact: lalxxl@gmail.com

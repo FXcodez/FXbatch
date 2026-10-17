@@ -1,7 +1,7 @@
 [project]
 name = "fxbatch"
-version = "2.0.0"
-description = "FXbatch Resizer 2.0.0 — Fast batch image compression and resizing utility"
+version = "2.5.0"
+description = "FXbatch Resizer 2.5.0 — Fast multi-format batch image compression, resizing and icon converter"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
