@@ -246,6 +246,109 @@ class TestFXbatchV250Engine(unittest.TestCase):
         self.assertEqual(len(ok_rename), 3)
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "photo_landscape_1.jpg")))
 
+    # ------------------------------------------------------------------
+    # 8. Favicon Package Creation (.ico + PNGs)
+    # ------------------------------------------------------------------
+    def test_favicon_package_single_image(self):
+        single_in_dir = os.path.join(self.test_dir, "single_in")
+        single_out_dir = os.path.join(self.test_dir, "single_out")
+        os.makedirs(single_in_dir, exist_ok=True)
+        os.makedirs(single_out_dir, exist_ok=True)
+
+        # Copy one image
+        src_img = os.path.join(single_in_dir, "app_logo.png")
+        shutil.copy(self.img_square_rgba, src_img)
+
+        res = process_images_in_folder(
+            single_in_dir,
+            single_out_dir,
+            quality=60,
+            resize_mode="ico",
+            resize_params={"ico_size": "256", "create_favicon": True},
+            dpi=72,
+            progress_callback=None,
+            cancel_event=None,
+            image_type="ico",
+        )
+        self.assertEqual(len([r for r in res if r.status == "ok"]), 1)
+
+        # Primary icon
+        primary_ico = os.path.join(single_out_dir, "app_logo.ico")
+        self.assertTrue(os.path.exists(primary_ico))
+
+        # Standard favicon root assets
+        fav_ico = os.path.join(single_out_dir, "favicon.ico")
+        fav_16 = os.path.join(single_out_dir, "favicon-16x16.png")
+        fav_32 = os.path.join(single_out_dir, "favicon-32x32.png")
+        fav_apple = os.path.join(single_out_dir, "apple-touch-icon.png")
+
+        self.assertTrue(os.path.exists(fav_ico))
+        self.assertTrue(os.path.exists(fav_16))
+        self.assertTrue(os.path.exists(fav_32))
+        self.assertTrue(os.path.exists(fav_apple))
+
+        # Check multi-size favicon.ico
+        with Image.open(fav_ico) as ico:
+            self.assertEqual(ico.format, "ICO")
+            sizes = getattr(ico, "info", {}).get("sizes", set())
+            self.assertIn((16, 16), sizes)
+            self.assertIn((32, 32), sizes)
+            self.assertIn((48, 48), sizes)
+
+        # Check PNG resolutions
+        with Image.open(fav_16) as img16:
+            self.assertEqual(img16.format, "PNG")
+            self.assertEqual(img16.size, (16, 16))
+
+        with Image.open(fav_32) as img32:
+            self.assertEqual(img32.format, "PNG")
+            self.assertEqual(img32.size, (32, 32))
+
+        with Image.open(fav_apple) as img_apple:
+            self.assertEqual(img_apple.format, "PNG")
+            self.assertEqual(img_apple.size, (180, 180))
+
+    def test_favicon_package_batch_images(self):
+        batch_out_dir = os.path.join(self.test_dir, "batch_ico_out")
+        os.makedirs(batch_out_dir, exist_ok=True)
+
+        res = process_images_in_folder(
+            self.input_dir,
+            batch_out_dir,
+            quality=60,
+            resize_mode="ico",
+            resize_params={"ico_size": "bundle", "create_favicon": True},
+            dpi=72,
+            progress_callback=None,
+            cancel_event=None,
+            image_type="ico",
+        )
+        self.assertEqual(len([r for r in res if r.status == "ok"]), 3)
+
+        # Each asset should have its own prefixed favicon package
+        for name in ("photo_landscape", "logo_transparent", "grayscale_alpha"):
+            fav_ico = os.path.join(batch_out_dir, f"{name}_favicon.ico")
+            fav_16 = os.path.join(batch_out_dir, f"{name}_favicon-16x16.png")
+            fav_32 = os.path.join(batch_out_dir, f"{name}_favicon-32x32.png")
+            fav_apple = os.path.join(batch_out_dir, f"{name}_apple-touch-icon.png")
+
+            self.assertTrue(os.path.exists(fav_ico), f"Missing {fav_ico}")
+            self.assertTrue(os.path.exists(fav_16), f"Missing {fav_16}")
+            self.assertTrue(os.path.exists(fav_32), f"Missing {fav_32}")
+            self.assertTrue(os.path.exists(fav_apple), f"Missing {fav_apple}")
+
+    def test_favicon_sample_encode_in_memory(self):
+        with Image.open(self.img_square_rgba) as img:
+            w1, h1, bytes_no_fav, _ = encode_sample_in_memory(
+                img, 60, "ico", {"ico_size": "256", "create_favicon": False}, 72, "ico"
+            )
+            w2, h2, bytes_with_fav, _ = encode_sample_in_memory(
+                img, 60, "ico", {"ico_size": "256", "create_favicon": True}, 72, "ico"
+            )
+            self.assertEqual((w1, h1), (256, 256))
+            self.assertEqual((w2, h2), (256, 256))
+            self.assertGreater(bytes_with_fav, bytes_no_fav)
+
 
 if __name__ == "__main__":
     unittest.main()

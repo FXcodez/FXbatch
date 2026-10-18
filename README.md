@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="icons/FXbatch.png" alt="FXbatch Logo" width="360"/>
+<img src="Design/Logos/FXbatch.png" alt="FXbatch Logo" width="360"/>
 
 # FXbatch 2.5.0
 
@@ -29,6 +29,7 @@ FXbatch is a desktop application for resizing, converting, and optimizing large 
 - **Sizing modes**: In addition to percentage scaling (5% to 200%), you can scale by bounding box (fit within max width and max height), fixed width (proportional height), or fixed height (proportional width).
 - **Interpolation filters**: Choose between Lanczos, Bicubic, Bilinear, or Nearest Neighbor.
 - **Windows icon creation (.ico)**: Convert photos and graphics into Windows icons. Exports single sizes (16, 32, 48, 64, 128, 256 px) or a multi-resolution package with all six sizes. Non-square source images are detected automatically and cropped to a 1:1 center ratio to avoid distortion.
+- **Web favicon bundle generation**: Check "Create Favicon Package (.ico + PNGs)" when exporting icons to automatically generate a complete web asset bundle: multi-resolution `favicon.ico` (16, 32, 48 px), `favicon-16x16.png`, `favicon-32x32.png`, and `apple-touch-icon.png` (180x180 px). Single images use standard root names; batch runs prefix files with the source image name.
 - **AVIF format support**: Read and export AVIF images alongside JPEG, PNG, WebP, and ICO. Transparent areas in PNG, WebP, AVIF, and ICO files are preserved.
 - **File collision handling**: Select how existing output files are handled in Settings (Overwrite, Auto-Rename with a numeric suffix, or Skip Existing).
 - **Custom filename patterns**: Use dynamic tokens such as `{name}`, `{w}`, `{h}`, `{quality}`, and `{format}` to structure output filenames.

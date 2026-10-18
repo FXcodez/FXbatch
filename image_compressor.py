@@ -46,6 +46,55 @@ def _crop_to_square(img: Image.Image) -> Image.Image:
     return img.crop((left, top, left + min_edge, top + min_edge))
 
 
+def _generate_favicon_package(
+    img: Image.Image,
+    output_dir: str,
+    base_stem: str,
+    is_single: bool,
+    resample_filter,
+    primary_output_path: str = "",
+) -> int:
+    """Generates a complete web favicon bundle:
+    - favicon.ico (multi-resolution 16, 32, 48px)
+    - favicon-16x16.png
+    - favicon-32x32.png
+    - apple-touch-icon.png (180x180)
+    For single image: standard web root filenames.
+    For batch images: prefixed with base_stem.
+    Returns total auxiliary bytes written (excluding primary_output_path if identical).
+    """
+    square = _crop_to_square(img)
+    rgba = _prepare_image_for_format(square, "ico")
+
+    prefix = "" if is_single else f"{base_stem}_"
+
+    ico_path = os.path.join(output_dir, f"{prefix}favicon.ico")
+    p16_path = os.path.join(output_dir, f"{prefix}favicon-16x16.png")
+    p32_path = os.path.join(output_dir, f"{prefix}favicon-32x32.png")
+    apple_path = os.path.join(output_dir, f"{prefix}apple-touch-icon.png")
+
+    # 1. Multi-resolution favicon.ico (16, 32, 48px)
+    rgba.save(ico_path, format="ICO", sizes=[(16, 16), (32, 32), (48, 48)])
+
+    # 2. 16x16 PNG
+    img_16 = rgba.resize((16, 16), resample_filter)
+    img_16.save(p16_path, format="PNG", optimize=True)
+
+    # 3. 32x32 PNG
+    img_32 = rgba.resize((32, 32), resample_filter)
+    img_32.save(p32_path, format="PNG", optimize=True)
+
+    # 4. 180x180 apple-touch-icon PNG
+    img_apple = rgba.resize((180, 180), resample_filter)
+    img_apple.save(apple_path, format="PNG", optimize=True)
+
+    extra_bytes = os.path.getsize(p16_path) + os.path.getsize(p32_path) + os.path.getsize(apple_path)
+    if not primary_output_path or os.path.normcase(os.path.abspath(primary_output_path)) != os.path.normcase(os.path.abspath(ico_path)):
+        extra_bytes += os.path.getsize(ico_path)
+
+    return extra_bytes
+
+
 def compute_target_dimensions(orig_w: int, orig_h: int, mode: str, params: dict) -> tuple[int, int]:
     """Calculate target (width, height) based on sizing mode and parameters."""
     if orig_w <= 0 or orig_h <= 0:
@@ -184,6 +233,7 @@ def compress_and_resize_image(args) -> ProcessResult:
             img = ImageOps.exif_transpose(img)
             orig_w, orig_h = img.size
 
+            extra_bytes = 0
             # Sizing mode transformation
             if fmt_norm == "ico":
                 # Ensure 1:1 square crop for ICO conversion
@@ -199,6 +249,20 @@ def compress_and_resize_image(args) -> ProcessResult:
                     target_sz = max(16, min(int(ico_size), 256))
                     img = img.resize((target_sz, target_sz), resample_filter)
                     img.save(output_path, format="ICO")
+
+                create_favicon = bool(resize_params.get("create_favicon", False))
+                if create_favicon:
+                    is_single = bool(resize_params.get("is_single_image", False))
+                    base_stem, _ = os.path.splitext(filename)
+                    output_dir = os.path.dirname(output_path)
+                    extra_bytes = _generate_favicon_package(
+                        img,
+                        output_dir=output_dir,
+                        base_stem=base_stem,
+                        is_single=is_single,
+                        resample_filter=resample_filter,
+                        primary_output_path=output_path,
+                    )
             else:
                 new_w, new_h = compute_target_dimensions(orig_w, orig_h, resize_mode, resize_params)
                 if (new_w, new_h) != (orig_w, orig_h):
@@ -217,7 +281,7 @@ def compress_and_resize_image(args) -> ProcessResult:
                 else:
                     raise ValueError(f"Unsupported format: {fmt}")
 
-        output_bytes = os.path.getsize(output_path)
+        output_bytes = os.path.getsize(output_path) + extra_bytes
         return ProcessResult(
             status="ok",
             filename=filename,
@@ -271,6 +335,9 @@ def process_images_in_folder(
 
     used_names: set[str] = set()
     args_list = []
+    is_single = (total_files == 1)
+    task_resize_params = dict(resize_params)
+    task_resize_params["is_single_image"] = is_single
 
     for fname in input_entries:
         in_path = os.path.join(folder_path, fname)
@@ -297,7 +364,7 @@ def process_images_in_folder(
             out_path,
             quality,
             resize_mode,
-            resize_params,
+            task_resize_params,
             dpi_tuple,
             fmt,
             resample_filter,
@@ -386,10 +453,18 @@ def encode_sample_in_memory(
         work_img.save(buf, format="WEBP", quality=quality, method=3, dpi=(dpi_val, dpi_val))
     elif fmt_norm == "avif":
         work_img.save(buf, format="AVIF", quality=quality)
-    elif fmt_norm == "ico":
+    extra_bytes = 0
+    if fmt_norm == "ico":
         work_img.save(buf, format="ICO")
+        if resize_params.get("create_favicon", False):
+            fav_buf = io.BytesIO()
+            fav_rgba = _prepare_image_for_format(_crop_to_square(pil_img), "ico")
+            fav_rgba.save(fav_buf, format="ICO", sizes=[(16, 16), (32, 32), (48, 48)])
+            for sz in (16, 32, 180):
+                fav_rgba.resize((sz, sz), resample_filter).save(fav_buf, format="PNG")
+            extra_bytes = fav_buf.tell()
 
-    return new_w, new_h, buf.tell(), is_square
+    return new_w, new_h, buf.tell() + extra_bytes, is_square
 
 
 def format_size(size_bytes: float) -> str:

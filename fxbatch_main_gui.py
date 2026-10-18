@@ -126,6 +126,7 @@ class ImageCompressorApp(ctk.CTk):
         self.collision_policy = ctk.StringVar(value="Overwrite")
         self.filename_template = ctk.StringVar(value="{name}")
         self.auto_open_folder = ctk.BooleanVar(value=False)
+        self.create_favicon = ctk.BooleanVar(value=False)
 
         # Progress simulation & smoothing state
         self._warmup_start_time = 0.0
@@ -288,6 +289,7 @@ class ImageCompressorApp(ctk.CTk):
                 "batch_folder": DEFAULT_BATCH_FOLDER,
                 "version": APP_VERSION,
                 "theme_mode": "Dark",
+                "create_favicon": "false",
             }
             try:
                 with open(config_path, "w") as configfile:
@@ -305,6 +307,7 @@ class ImageCompressorApp(ctk.CTk):
         self.filename_template.set(settings.get("filename_template", "{name}"))
         self.collision_policy.set(settings.get("collision_policy", "Overwrite").capitalize())
         self.auto_open_folder.set(settings.get("auto_open_folder", "false").lower() in ("true", "1"))
+        self.create_favicon.set(settings.get("create_favicon", "false").lower() in ("true", "1"))
 
         dpi_str = settings.get("dpi", "72")
         self.image_dpi.set(dpi_str)
@@ -478,6 +481,7 @@ class ImageCompressorApp(ctk.CTk):
             "256": "256 x 256 px",
         }
         self.ico_size_choice.set(ico_labels.get(default_ico, "Bundle (16-256 px)"))
+        self.create_favicon.set(settings.get("create_favicon", "false").lower() in ("true", "1"))
 
         # 7. Reset DPI
         self.image_dpi.set(default_dpi)
@@ -849,6 +853,7 @@ class ImageCompressorApp(ctk.CTk):
             "fixed_width": int(self.fixed_width.get().strip() or "1200"),
             "fixed_height": int(self.fixed_height.get().strip() or "800"),
             "ico_size": "bundle" if "bundle" in ico_raw else ico_raw,
+            "create_favicon": self.create_favicon.get(),
         }
 
     def update_sample_image_info(self, *args):
@@ -938,7 +943,10 @@ class ImageCompressorApp(ctk.CTk):
             fmt_spec = "PNG · Lossless"
         elif img_type == "ico":
             ico_spec = self.ico_size_choice.get().split()[0]
-            fmt_spec = f"ICO · {ico_spec}"
+            if self.create_favicon.get():
+                fmt_spec = f"ICO · {ico_spec} + Favicon"
+            else:
+                fmt_spec = f"ICO · {ico_spec}"
         else:
             fmt_spec = f"{img_type.upper()} · Q{quality}"
         s2.configure(text=fmt_spec)
@@ -1324,7 +1332,7 @@ class SettingsWindow(ctk.CTkToplevel):
         super().__init__(master)
         self.master = master
         self.title("Settings — FXbatch 2.5.0")
-        self.geometry("480x445")
+        self.geometry("480x475")
         self.resizable(False, False)
         self.configure(fg_color=COLOR_BG)
 
@@ -1338,6 +1346,7 @@ class SettingsWindow(ctk.CTkToplevel):
             "collision_policy": "Overwrite",
             "filename_template": "{name}",
             "auto_open_folder": "false",
+            "create_favicon": "false",
         }
 
         icon_path = master.get_icon_path()
@@ -1348,7 +1357,7 @@ class SettingsWindow(ctk.CTkToplevel):
         self.bind("<Unmap>", lambda e: CTkTooltip.hide_active())
         self.bind("<FocusOut>", lambda e: CTkTooltip.hide_active())
         self.create_widgets()
-        self.center_window(480, 445)
+        self.center_window(480, 475)
 
         self.lift()
         self.attributes("-topmost", True)
@@ -1617,9 +1626,39 @@ class SettingsWindow(ctk.CTkToplevel):
         CTkTooltip(folder_lbl, folder_tip)
         CTkTooltip(folder_entry, folder_tip)
 
-        # Row 11: Action Buttons (Increased font size by 1 pt: 11 -> 12, 20px top padding)
+        # Row 11: Create Favicon Package Checkbox
+        fav_lbl = ctk.CTkLabel(
+            self.card,
+            text="FAVICON PACKAGE:",
+            font=ctk.CTkFont(family=HEAD_FONT, size=11, weight="bold"),
+            text_color=COLOR_TEXT_3,
+            anchor="e",
+        )
+        fav_lbl.grid(row=11, column=0, padx=(18, 22), pady=2, sticky="e")
+
+        self.favicon_var = ctk.BooleanVar(value=self.master.create_favicon.get())
+        favicon_chk = ctk.CTkCheckBox(
+            self.card,
+            text="Generate favicon bundle for icons",
+            variable=self.favicon_var,
+            font=ctk.CTkFont(family=BODY_FONT, size=11),
+            text_color=COLOR_TEXT,
+            corner_radius=CORNER_RADIUS,
+            fg_color=COLOR_BRAND,
+            hover_color=COLOR_BRAND_HOVER,
+        )
+        favicon_chk.grid(row=11, column=1, padx=(0, 18), pady=2, sticky="w")
+        fav_tip = (
+            "When checked, icon exports automatically generate a complete web favicon bundle:\n"
+            "favicon.ico (16/32/48 multi-size), favicon-16x16.png, favicon-32x32.png, apple-touch-icon.png.\n"
+            "Default: Off."
+        )
+        CTkTooltip(fav_lbl, fav_tip)
+        CTkTooltip(favicon_chk, fav_tip)
+
+        # Row 12: Action Buttons (Increased font size by 1 pt: 11 -> 12, 20px top padding)
         btn_frame = ctk.CTkFrame(self.card, fg_color="transparent")
-        btn_frame.grid(row=11, column=0, columnspan=2, pady=(20, 10), padx=18, sticky="ew")
+        btn_frame.grid(row=12, column=0, columnspan=2, pady=(20, 10), padx=18, sticky="ew")
         btn_frame.grid_columnconfigure(0, weight=1)
         btn_frame.grid_columnconfigure(1, weight=1)
 
@@ -1710,6 +1749,7 @@ class SettingsWindow(ctk.CTkToplevel):
         policy = self.collision_var.get().strip().capitalize()
         template = self.template_var.get().strip() or "{name}"
         auto_open = self.auto_open_var.get()
+        create_fav = self.favicon_var.get()
 
         if "Settings" not in self.master.config:
             self.master.config["Settings"] = {}
@@ -1723,6 +1763,7 @@ class SettingsWindow(ctk.CTkToplevel):
         self.master.config["Settings"]["collision_policy"] = policy
         self.master.config["Settings"]["filename_template"] = template
         self.master.config["Settings"]["auto_open_folder"] = str(auto_open).lower()
+        self.master.config["Settings"]["create_favicon"] = str(create_fav).lower()
 
         try:
             with open(self.master.get_config_path(), "w") as configfile:
@@ -1736,11 +1777,12 @@ class SettingsWindow(ctk.CTkToplevel):
         self.master.collision_policy.set(policy)
         self.master.filename_template.set(template)
         self.master.auto_open_folder.set(auto_open)
+        self.master.create_favicon.set(create_fav)
         self.master.set_theme(theme_mode)
 
         self.destroy()
 
-    def center_window(self, w: int = 480, h: int = 445):
+    def center_window(self, w: int = 480, h: int = 475):
         self.update_idletasks()
         x = (self.master.winfo_width() // 2) - (w // 2) + self.master.winfo_x()
         y = (self.master.winfo_height() // 2) - (h // 2) + self.master.winfo_y()

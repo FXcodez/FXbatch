@@ -850,7 +850,16 @@
             <p>When selecting <code>.ICO</code> format, FXbatch provides dedicated icon generation options:</p>
             <ul>
                 <li><strong>Standard presets:</strong> Create single-resolution icons at <code>16x16</code>, <code>24x24</code>, <code>32x32</code>, <code>48x48</code>, <code>64x64</code>, <code>128x128</code>, or <code>256x256</code> pixels.</li>
-                <li><strong>Multi-resolution bundle:</strong> Select <code>Multi-Resolution Bundle</code> to pack all seven standard resolutions into a single <code>.ico</code> file. Windows then selects the right size based on screen scaling and folder view settings.</li>
+                <li><strong>Multi-resolution bundle:</strong> Select <code>Bundle (16-256 px)</code> to pack standard resolutions into a single <code>.ico</code> file. Windows then selects the right size based on screen scaling and folder view settings.</li>
+                <li><strong>Web favicon package:</strong> Check <code>Create Favicon Package (.ico + PNGs)</code> to export a ready-to-use web asset set alongside your icon:
+                    <ul>
+                        <li><code>favicon.ico</code> with embedded 16&times;16, 32&times;32, and 48&times;48 frames</li>
+                        <li><code>favicon-16x16.png</code> for standard browser tabs</li>
+                        <li><code>favicon-32x32.png</code> for high-DPI tabs</li>
+                        <li><code>apple-touch-icon.png</code> (180&times;180 px) for mobile bookmarks and home screens</li>
+                    </ul>
+                    When processing a single image, FXbatch writes standard root filenames. When converting multiple images in batch, it prefixes each file with the source image name (such as <code>logo_favicon.ico</code>) to avoid overwriting files. You can also turn this option on by default in the Settings dialog.
+                </li>
                 <li><strong>Aspect ratio check:</strong> Windows icons require square (1:1) dimensions. FXbatch checks the source image aspect ratio and displays an alert if it is not 1:1, helping prevent unintended image stretching.</li>
             </ul>
         </section>
@@ -960,6 +969,7 @@
                 <li><strong>Default Resize %:</strong> Baseline resize percentage (5% to 200%, default <code>40%</code>).</li>
                 <li><strong>Default DPI:</strong> Baseline print resolution in dots per inch (1 to 3000, default <code>72</code> for screens, <code>300</code> for print).</li>
                 <li><strong>Subfolder Name:</strong> Name of the subfolder created in source directories when using subfolder mode (default <code>LowRes</code>).</li>
+                <li><strong>Favicon Package:</strong> Default setting for exporting the web favicon bundle when converting icons (default <code>off</code>).</li>
             </ul>
 
             <h4>Naming Template Variables</h4>

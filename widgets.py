@@ -872,7 +872,7 @@ class WidgetCreator:
         self.app.fixed_h_entry.bind("<Return>", lambda e: self.delayed_update())
 
         # 5. ICO Size Frame
-        self.sizing_ico_frame = self.ctk.CTkFrame(self.sizing_container, fg_color="transparent", height=30)
+        self.sizing_ico_frame = self.ctk.CTkFrame(self.sizing_container, fg_color="transparent")
         self.sizing_ico_frame.grid_columnconfigure(1, weight=1)
         self.ctk.CTkLabel(
             self.sizing_ico_frame, text="ICON SIZE", width=70, font=self.ctk.CTkFont(family=HEAD_FONT, size=11, weight="bold"), text_color=COLOR_TEXT_3, anchor="w"
@@ -898,6 +898,33 @@ class WidgetCreator:
             text_color=COLOR_TEXT,
         )
         self.app.ico_size_menu.grid(row=0, column=1, sticky="ew")
+
+        # Row 1: Create Favicon Package Checkbox
+        self.app.favicon_checkbox = self.ctk.CTkCheckBox(
+            self.sizing_ico_frame,
+            text="Create Favicon Package (.ico + PNGs)",
+            variable=self.app.create_favicon,
+            command=lambda: self.delayed_update(),
+            font=self.ctk.CTkFont(family=BODY_FONT, size=11),
+            text_color=COLOR_TEXT,
+            corner_radius=CORNER_RADIUS,
+            fg_color=COLOR_BRAND,
+            hover_color=COLOR_BRAND_HOVER,
+            checkbox_width=18,
+            checkbox_height=18,
+        )
+        self.app.favicon_checkbox.grid(row=1, column=0, columnspan=2, sticky="w", pady=(8, 2))
+
+        fav_tip = (
+            "When checked, generates a complete web favicon bundle:\n"
+            "• favicon.ico (multi-resolution 16, 32, 48px)\n"
+            "• favicon-16x16.png (standard tab)\n"
+            "• favicon-32x32.png (retina tab)\n"
+            "• apple-touch-icon.png (180x180 mobile)\n\n"
+            "Single image outputs standard root names;\n"
+            "batch images prefix filenames with each asset name."
+        )
+        CTkTooltip(self.app.favicon_checkbox, fav_tip)
 
         # Initial default display
         self.sizing_percent_frame.grid(row=0, column=0, sticky="ew")
